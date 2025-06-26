@@ -2,36 +2,61 @@ import { useState, useCallback } from 'react';
 import axios from 'axios'
 
 export default function PostFetcher() {
+    interface LeadDoc {
+     content: string;
+     filename: string;
+     fileType: string;
+     fileSize: number;
+     lastModified: string;
+    }
+    //defines object shape - custom data type
+    interface leadData {
+    user_id: string;
+    organization_id: string;
+    documents: LeadDoc[];
+    source: string;
+    context_type: string;
+    scope: string;
+    metadata: {
+        fileName: string;
+        fileType: string;
+        fileSize: number;
+        lastModified: string;
+    };
+    }
+    interface AxiosErrorMsg{
+        response?:{
+            data?:{
+                message?:string;
+            }
+        }
+    }
+
     const [tweetIdInput, setTweetIdInput] = useState('');
-    const [fetchedPosts, setFetchedPosts] = useState(null);
+    const [fetchedLead, setFetchedLead] = useState<leadData | null>(null);
     const [loading, setLoading] = useState(false);
-    const [error, setError] = useState(null);
+    const [error, setError] = useState<string | null>(null);
 
     const fetchTweetById = useCallback(async () => {
         if (!tweetIdInput.trim()) { 
             setError('Please enter a Tweet ID.');
-            setFetchedPosts([]);
+            setFetchedLead(null);
             return;
         }
         setLoading(true); 
         setError(null); 
-        setFetchedPosts([]);
+        setFetchedLead(null);
 
         try {
-            const res = await axios.get(`http://localhost:4000/capture-leads?tweetId=${tweetIdInput}`);
+            const res = await axios.get<leadData>(`http://localhost:4000/capture-leads?tweetId=${tweetIdInput}`);
             console.log(res.data);
-            // const dataToSet = Array.isArray(res.data) ? res.data : [res.data];
-             setFetchedPosts(res.data);
+            setFetchedLead(res.data);
             
-        } catch (err) {
-            console.error('Failed to fetch tweet:', err);
-
-            if (err.response && err.response.data && err.response.data.message) {
-                setError(err.response.data.message);
-            } else {
-                setError('Failed to fetch tweet. Please check the ID and try again.');
-            }
-            setFetchedPosts([]); 
+        } catch (err:unknown) {
+            const error = err as AxiosErrorMsg
+            const message = error?.response?.data?.message;
+            setError(message || 'Failed to fetch tweet. Please check the ID and try again.');
+            setFetchedLead(null); 
         } 
         setLoading(false);
     }, [tweetIdInput]);
@@ -52,8 +77,8 @@ export default function PostFetcher() {
                     id="tweetId"
                     className="w-full p-3 rounded-md bg-zinc-700 border border-zinc-600 focus:border-teal-500 focus:ring focus:ring-teal-500 focus:ring-opacity-50 text-white placeholder-zinc-400 text-lg"
                     value={tweetIdInput}
-                    onChange={(e) => setTweetIdInput(e.target.value)}
-                    placeholder="e.g., 1460323737035677698 or 1234567890123456789" // Example Twitter Tweet ID
+                    onChange={(e: React.ChangeEvent<HTMLInputElement>) => setTweetIdInput(e.target.value)}
+                    placeholder="e.g., 1460323737035677698 or 1234567890123456789" 
                     aria-label="Twitter Tweet ID input"
                 />
                 <button
@@ -85,21 +110,21 @@ export default function PostFetcher() {
                     </div>
                 )}
 
-                {!fetchedPosts && !loading && !error && (
+                {!fetchedLead && !loading && !error && (
                     <p className="text-zinc-400 text-center">Enter a Tweet ID and click "Fetch Leads" to see details.</p>
                 )}
 
-                {fetchedPosts && (
+                {fetchedLead && (
                     <div className="mb-4 flex flex-col items-start">
                         <h3 className="text-xl font-bold text-teal-200 mb-2">Lead Summary:</h3>
-                        <p className="text-zinc-100"><strong>User ID:</strong> {fetchedPosts.user_id}</p>
-                        <p className="text-zinc-100"><strong>Organization ID:</strong> {fetchedPosts.organization_id}</p>
-                        <p className="text-zinc-100"><strong>Source:</strong> {fetchedPosts.source}</p>
-                        <p className="text-zinc-100"><strong>Context Type:</strong> {fetchedPosts.context_type}</p>
-                        <p className="text-zinc-100"><strong>Scope:</strong> {fetchedPosts.scope}</p>
+                        <p className="text-zinc-100"><strong>User ID:</strong> {fetchedLead.user_id}</p>
+                        <p className="text-zinc-100"><strong>Organization ID:</strong> {fetchedLead.organization_id}</p>
+                        <p className="text-zinc-100"><strong>Source:</strong> {fetchedLead.source}</p>
+                        <p className="text-zinc-100"><strong>Context Type:</strong> {fetchedLead.context_type}</p>
+                        <p className="text-zinc-100"><strong>Scope:</strong> {fetchedLead.scope}</p>
                         <h4 className="text-lg font-semibold text-teal-200 mt-4 mb-2">Documents (Leads):</h4>
-                        {fetchedPosts.documents && fetchedPosts.documents?.length > 0 ? (
-                            fetchedPosts.documents.map((leadDoc, index) => (
+                        {fetchedLead.documents && fetchedLead.documents?.length > 0 ? (
+                            fetchedLead.documents.map((leadDoc, index) => (
                                 <div key={index} className="bg-zinc-700 w-full p-4 rounded-md mb-3 shadow-inner">
                                     <p className="text-zinc-100 text-base text-left leading-relaxed whitespace-pre-wrap break-words mb-2">
                                         {leadDoc.content || 'No content available.'}
