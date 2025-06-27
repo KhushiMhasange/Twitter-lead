@@ -2,11 +2,14 @@ import { useRoutes, Link, usePath } from "raviger";
 import './App.css';
 import PostFetcher from './components/PostFetcher';
 import RecentPosts from './components/RecentPosts';
+import Dashboard from './components/Dashboard';
+
 
 function App() {
   const routes = useRoutes({
     "/": () => <PostFetcher />,
     "/liked-tweets": () => <RecentPosts />,
+    "/dashboard":()=><Dashboard/>,
   });
 
   const currentPath = usePath();

@@ -3,7 +3,6 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.fetchTweetId = fetchTweetId;
 exports.fetchLeadsFromTweet = fetchLeadsFromTweet;
 const axios_1 = __importDefault(require("axios"));
 const dotenv_1 = __importDefault(require("dotenv"));
@@ -27,29 +26,6 @@ const token = {
     key: process.env.ACCESS_TOKEN || '',
     secret: process.env.ACCESS_TOKEN_SECRET || '',
 };
-async function fetchTweetId() {
-    const url = 'https://api.twitter.com/2/tweets/search/recent';
-    try {
-        const res = await axios_1.default.get(url, {
-            headers: {
-                Authorization: `Bearer ${process.env.TWITTER_BEARER_TOKEN}`,
-                Accept: 'application/json',
-            },
-            params: {
-                query: 'webdev OR programming',
-                max_results: 5,
-            },
-        });
-        const tweets = res.data.data.map((tweet) => ({
-            id: tweet.id,
-            text: tweet.text,
-        }));
-        console.log(tweets);
-    }
-    catch (err) {
-        console.error('Error retrieving tweets:', err.response?.data || err.message);
-    }
-}
 async function fetchLeadsFromTweet(tweetId, limit = 20) {
     const params = new URLSearchParams({
         max_results: limit.toString(),
@@ -80,7 +56,7 @@ async function fetchLeadsFromTweet(tweetId, limit = 20) {
             context_type: 'resource',
             scope: 'internal',
             metadata: {
-                fileName: 'leads from twitter on post about AI agents',
+                fileName: `leads from twitter ID ${tweetId}`,
                 fileType: 'string',
                 fileSize: 1024,
                 lastModified: 'June 24, 2025',

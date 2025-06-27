@@ -17,7 +17,7 @@ const oauth = new OAuth({
       .update(base_string)
       .digest('base64');
   },
-});
+})
 
 const token = {
   key: process.env.ACCESS_TOKEN || '',
@@ -57,31 +57,6 @@ interface Lead {
   };
 }
 
-export async function fetchTweetId(): Promise<void> {
-  const url = 'https://api.twitter.com/2/tweets/search/recent';
-
-  try {
-    const res = await axios.get(url, {
-      headers: {
-        Authorization: `Bearer ${process.env.TWITTER_BEARER_TOKEN}`,
-        Accept: 'application/json',
-      },
-      params: {
-        query: 'webdev OR programming',
-        max_results: 5,
-      },
-    });
-
-    const tweets: Tweet[] = res.data.data.map((tweet: any) => ({
-      id: tweet.id,
-      text: tweet.text,
-    }));
-
-    console.log(tweets);
-  } catch (err: any) {
-    console.error('Error retrieving tweets:', err.response?.data || err.message);
-  }
-}
 
 export async function fetchLeadsFromTweet(tweetId: string, limit: number = 20): Promise<Lead | []> {
   const params = new URLSearchParams({
@@ -118,7 +93,7 @@ export async function fetchLeadsFromTweet(tweetId: string, limit: number = 20): 
       context_type: 'resource',
       scope: 'internal',
       metadata: {
-        fileName: 'leads from twitter on post about AI agents',
+        fileName: `leads from twitter ID ${tweetId}`,
         fileType: 'string',
         fileSize: 1024,
         lastModified: 'June 24, 2025',
